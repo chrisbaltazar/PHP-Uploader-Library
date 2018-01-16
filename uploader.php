@@ -17,6 +17,10 @@ class Uploader{
         $this->name = $name;
     }
     
+    public function getFilesBuffer() {
+        return $this->files;
+    }
+    
     public function getAllowed(){
         return $this->allowed;
     }
@@ -48,34 +52,38 @@ class Uploader{
     
     
     public function Upload(){
-        foreach($this->files as $key => $f){
-            $file_name = $f['name'];
-            $file_path = $f['tmp_name'];
-            $file_ext = strtolower(end(explode(".", $file_name)));
-            if($file_name){
-                if(in_array($file_ext, $this->allowed)){
-                    switch($this->name){
-                        case self::HASH_NAME:
-                            $target = $this->directory . md5_file($file_path) . "." . $file_ext;
-                            break;
-                        case self::SAME_NAME:
-                            $target = $this->directory . $file_name;
-                            break;
-                        default:
-                            $target = $this->directory . str_replace(".".$file_ext, "", $this->name) . "." . $file_ext;
-                            break;
-                    }
-                    if(move_uploaded_file($file_path, $target)){
-                        $this->uploaded[] = array("FILE" => $file_name, "PATH" => $target, "EXT" => $file_ext, "SRC" => $key);
+        if(count($this->files)){
+            foreach($this->files as $key => $f){
+                $file_name = $f['name'];
+                $file_path = $f['tmp_name'];
+                $file_ext = strtolower(end(explode(".", $file_name)));
+                if($file_name){
+                    if(in_array($file_ext, $this->allowed)){
+                        switch($this->name){
+                            case self::HASH_NAME:
+                                $target = $this->directory . md5_file($file_path) . "." . $file_ext;
+                                break;
+                            case self::SAME_NAME:
+                                $target = $this->directory . $file_name;
+                                break;
+                            default:
+                                $target = $this->directory . str_replace(".".$file_ext, "", $this->name) . "." . $file_ext;
+                                break;
+                        }
+                        if(move_uploaded_file($file_path, $target)){
+                            $this->uploaded[] = array("FILE" => $file_name, "PATH" => $target, "EXT" => $file_ext, "SRC" => $key);
+                        }else{
+                            die("Error subiendo archivo: " . $file_name . "/" . $file_path);
+                        }
                     }else{
-                        die("Error subiendo archivo: " . $file_name);
+                        die("Archivo no permitido: " . $file_name);
                     }
                 }else{
-                    die("Archivo no permitido: " . $file_name);
+                    die("No fue recibido el archivo");
                 }
-            }else{
-                die("No fue recibido el archivo");
             }
+        }else{
+            die("No se encontraron archivos para subir");
         }
         return true;
     }
